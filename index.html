@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Wedding Invitation | Ayyannar & Divya</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Pinyon+Script&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --gold-primary: #d4af37;
+      --emerald-dark: #06130e;
+      --emerald-card: rgba(10, 26, 19, 0.84);
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: var(--emerald-dark);
+      color: #f7f3eb;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .font-serif-luxury {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+
+    .font-script {
+      font-family: 'Pinyon Script', cursive;
+    }
+
+    /* Fixed Temple Gopuram Motif */
+    .gopuram-bg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 92vw;
+      max-width: 520px;
+      height: 82vh;
+      background: url('assets/gopuram.png') no-repeat center center;
+      background-size: contain;
+      opacity: 0.08;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Continuous Falling Flowers Canvas */
+    #flowerCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Envelope Opening Transitions */
+    .envelope-screen {
+      transition: opacity 1s cubic-bezier(0.77, 0, 0.175, 1), transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+    }
+    .envelope-screen.opened {
+      transform: translateY(-100vh);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .envelope-flap {
+      transform-origin: top center;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .flap-open {
+      transform: rotateX(180deg);
+    }
+
+    /* Wax Seal Button */
+    .seal-button-container {
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .seal-button-container:hover {
+      transform: scale(1.06);
+    }
+    .seal-button-container:active {
+      transform: scale(0.92);
+    }
+
+    /* Glass Luxury Container */
+    .luxury-card {
+      background: var(--emerald-card);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    .luxury-card::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(212, 175, 55, 0.12);
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    /* Metallic Gold Gradients */
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #fcedc5 0%, #d4af37 50%, #aa7c11 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gold-btn {
+      background: linear-gradient(135deg, #f2d98d 0%, #c99b27 50%, #9e7514 100%);
+      color: #0b1d16;
+      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+    }
+
+    #scratchCanvas {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="relative selection:bg-amber-500/30 selection:text-amber-200">
+
+  <div class="gopuram-bg"></div>
+
+  <canvas id="flowerCanvas"></canvas>
+
+  <audio id="bgAudio" loop preload="auto">
+    <source src="assets/bg-music.mp3" type="audio/mpeg" />
+  </audio>
+
+  <button id="musicToggle" class="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-stone-950/80 border border-amber-500/40 text-amber-200 flex items-center justify-center shadow-2xl backdrop-blur-md transition-transform active:scale-90 focus:outline-none" aria-label="Toggle Soundtrack">
+    <span id="musicIcon" class="text-base">🔇</span>
+  </button>
+
+  <canvas id="particleCanvas" class="fixed inset-0 z-50 pointer-events-none"></canvas>
+
+  <div id="envelopeScreen" class="envelope-screen fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050e0a] px-6 text-center">
+    <div class="relative w-full max-w-sm rounded-3xl p-8 border border-amber-500/30 bg-gradient-to-b from-[#0f241a] to-[#081510] shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col items-center">
+      
+      <div id="envelopeFlap" class="envelope-flap absolute top-0 inset-x-0 h-28 bg-[#143224] border-b border-amber-500/30 rounded-t-3xl [clip-path:polygon(0_0,100%_0,50%_100%)] z-10 pointer-events-none"></div>
+
+      <p class="text-[10px] uppercase tracking-[0.4em] text-amber-300/70 mb-2 mt-4 z-20">Royal Invitation</p>
+      <p class="font-script text-3xl text-amber-100/90 mb-6 z-20">Two Hearts, One Journey</p>
+      
+      <div id="sealButton" class="seal-button-container z-30 my-2 w-28 h-28 flex items-center justify-center">
+        <img src="assets/wax-seal.png" alt="Wedding Wax Seal" class="w-full h-full object-contain drop-shadow-[0_12px_20px_rgba(0,0,0,0.7)]" />
+      </div>
+      
+      <p class="mt-6 text-[11px] uppercase tracking-[0.25em] text-amber-300/90 animate-pulse z-20">
+        Tap Seal to Open
+      </p>
+    </div>
+  </div>
+
+  <main class="relative z-10 max-w-md mx-auto px-5 py-8 flex flex-col items-center space-y-16">
+
+    <section class="w-full flex flex-col items-center pt-2">
+      <div class="w-full aspect-[9/16] rounded-3xl overflow-hidden shadow-2xl border border-amber-500/40 relative bg-black">
+        <video class="w-full h-full object-cover" autoplay loop muted playsinline>
+          <source src="assets/video1.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <p class="mt-4 text-[10px] tracking-[0.3em] text-amber-300/80 uppercase animate-bounce">Scroll Down ↓</p>
+    </section>
+
+    <section class="luxury-card w-full p-8 rounded-3xl text-center">
+      <p class="text-[10px] uppercase tracking-[0.35em] text-amber-300/70 mb-6">Together With Their Families</p>
+      
+      <div class="space-y-1">
+        <h1 class="font-serif-luxury text-4xl tracking-wide gold-gradient-text font-bold">Ayyannar</h1>
+      </div>
+
+      <div class="my-4 flex items-center justify-center space-x-3">
+        <div class="h-[1px] w-12 bg-amber-500/20"></div>
+        <span class="font-serif-luxury text-2xl italic text-amber-300">&</span>
+        <div class="h-[1px] w-12 bg-amber-500/20"></div>
+      </div>
+
+      <div class="space-y-1">
+        <h1 class="font-serif-luxury text-4xl tracking-wide gold-gradient-text font-bold">Divya</h1>
+      </div>
+
+      <div class="w-16 h-[1px] bg-amber-500/30 mx-auto my-6"></div>
+      
+      <p class="text-xs text-stone-300 leading-relaxed font-light px-2">
+        Our special day wouldn’t be complete without the people who mean the most to us. Please join us, share our joy, and shower us with your warm love and blessings as we begin our forever!
+      </p>
+    </section>
+
+    <section class="w-full">
+      <div class="text-center mb-3">
+        <p class="text-[10px] uppercase tracking-[0.3em] text-amber-300/70">Our Moments</p>
+      </div>
+      <div class="w-full aspect-[9/16] rounded-3xl overflow-hidden shadow-2xl border border-amber-500/40 bg-black">
+        <video class="w-full h-full object-cover" autoplay loop muted playsinline>
+          <source src="assets/video2.mp4" type="video/mp4" />
+        </video>
+      </div>
+    </section>
+
+    <section class="luxury-card w-full p-6 rounded-3xl text-center">
+      <h2 class="font-serif-luxury text-2xl gold-gradient-text mb-1">The Auspicious Wedding Day</h2>
+      <p class="text-[10px] text-stone-400 tracking-[0.2em] uppercase mb-6">Swipe across to reveal</p>
+
+      <div class="relative w-64 h-28 mx-auto rounded-2xl overflow-hidden shadow-inner flex items-center justify-center bg-[#07130e] border border-amber-500/30">
+        <div class="text-center">
+          <p class="font-serif-luxury text-2xl font-bold tracking-wider text-amber-200">SEPTEMBER 13, 2026</p>
+          <p class="text-[11px] text-stone-400 tracking-[0.3em] mt-1">SUNDAY MORNING</p>
+        </div>
+        <canvas id="scratchCanvas" width="256" height="112" class="absolute inset-0 z-10 cursor-pointer"></canvas>
+      </div>
+
+      <div class="grid grid-cols-4 gap-2 mt-8 text-center border-t border-amber-500/20 pt-6">
+        <div>
+          <span id="days" class="font-serif-luxury text-3xl font-semibold text-amber-200">00</span>
+          <span class="block text-[9px] uppercase text-stone-400 tracking-widest mt-1">Days</span>
+        </div>
+        <div>
+          <span id="hours" class="font-serif-luxury text-3xl font-semibold text-amber-200">00</span>
+          <span class="block text-[9px] uppercase text-stone-400 tracking-widest mt-1">Hours</span>
+        </div>
+        <div>
+          <span id="minutes" class="font-serif-luxury text-3xl font-semibold text-amber-200">00</span>
+          <span class="block text-[9px] uppercase text-stone-400 tracking-widest mt-1">Mins</span>
+        </div>
+        <div>
+          <span id="seconds" class="font-serif-luxury text-3xl font-semibold text-amber-200">00</span>
+          <span class="block text-[9px] uppercase text-stone-400 tracking-widest mt-1">Secs</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="w-full">
+      <h2 class="font-serif-luxury text-2xl text-center gold-gradient-text mb-4 tracking-wider">Cherished Moments</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="aspect-square rounded-2xl overflow-hidden border border-amber-500/30 shadow-lg">
+          <img src="assets/photo1.jpg" alt="Moment 1" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+        </div>
+        <div class="aspect-square rounded-2xl overflow-hidden border border-amber-500/30 shadow-lg">
+          <img src="assets/photo2.jpg" alt="Moment 2" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+        </div>
+        <div class="aspect-square rounded-2xl overflow-hidden border border-amber-500/30 shadow-lg">
+          <img src="assets/photo3.jpg" alt="Moment 3" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+        </div>
+        <div class="aspect-square rounded-2xl overflow-hidden border border-amber-500/30 shadow-lg">
+          <img src="assets/photo4.jpg" alt="Moment 4" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+        </div>
+      </div>
+    </section>
+
+    <section class="luxury-card w-full p-7 rounded-3xl space-y-5">
+      <h2 class="font-serif-luxury text-2xl text-center gold-gradient-text">The Sacred Union</h2>
+
+      <div class="border-l-2 border-amber-500/70 pl-4 py-1 space-y-1">
+        <p class="text-[11px] uppercase tracking-[0.25em] text-amber-300 font-semibold">Holy Muhurtham</p>
+        <p class="text-base font-semibold text-stone-100">Sunday, September 13, 2026</p>
+        <p class="text-xs text-amber-200/90 font-medium">Auspicious Morning Hours</p>
+        <p class="text-xs text-stone-400 font-light pt-1 leading-relaxed">
+          Solemnization and sacred traditional rituals uniting two souls.
+        </p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 text-center leading-relaxed">
+        <span class="font-semibold block uppercase tracking-[0.2em] mb-1 text-[10px]">With Love & Blessings</span>
+        Our Families & Friends  
+        <span class="block mt-2 font-mono text-[10px] text-stone-400">#AyyannarWedsDivya</span>
+      </div>
+    </section>
+
+    <section class="luxury-card w-full p-6 rounded-3xl text-center border-amber-500/40">
+      <p class="text-[10px] uppercase tracking-[0.3em] text-amber-300/80 mb-2">Pre-Wedding Celebration</p>
+      <h3 class="font-serif-luxury text-2xl gold-gradient-text font-bold mb-1">Grand Reception</h3>
+      <p class="text-sm font-semibold text-stone-100">Saturday, Sept 12, 2026 | 07:00 PM</p>
+      <p class="text-xs text-stone-300 font-light mt-2">
+        Join us for an evening of warm greetings, joyful music, and celebratory dinner.
+      </p>
+    </section>
+
+    <section class="luxury-card w-full p-7 rounded-3xl text-center">
+      <h2 class="font-serif-luxury text-2xl gold-gradient-text mb-2">Venue & Location</h2>
+      <p class="text-base font-semibold text-stone-100">ASG Thirumana Mandapam</p>
+      <p class="text-xs text-stone-300 leading-relaxed mt-1">
+        (Opp. New Bus Stand, Villupuram)
+      </p>
+
+      <p class="text-[11px] text-amber-300/80 italic mt-4 font-light">
+        "Please consider this as our personal invitation to you and your family!"
+      </p>
+
+      <div class="flex flex-col space-y-3 mt-6">
+        <a href="https://maps.app.goo.gl/ZeBHvwTnuGPV7ZZ3A" target="_blank" class="w-full py-3.5 gold-btn font-semibold rounded-xl text-xs uppercase tracking-[0.2em] transition-transform active:scale-95 flex items-center justify-center">
+          Navigate With Google Maps
+        </a>
+        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Wedding+Ceremony:+Ayyannar+%26+Divya&dates=20260913T010000Z/20260913T070000Z&details=Holy+Muhurtham+on+Sunday+Morning,+September+13,+2026.+Pre-wedding+Reception+on+Saturday,+Sept+12+at+7:00+PM.&location=ASG+Thirumana+Mandapam,+Opp.+New+Bus+Stand,+Villupuram" target="_blank" class="w-full py-3.5 bg-stone-900/60 border border-amber-500/40 text-amber-200 rounded-xl text-xs uppercase tracking-[0.2em] hover:bg-amber-500/10 transition-colors">
+          Add To Google Calendar
+        </a>
+      </div>
+    </section>
+
+    <footer class="w-full text-center py-6 mt-4 border-t border-amber-500/20 flex flex-col items-center">
+      <p class="text-[9px] uppercase tracking-[0.3em] text-stone-400 mb-2">Crafted With Elegance By</p>
+      
+      <a href="https://instagram.com/verveinvites" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+        <div class="w-14 h-14 mb-2 rounded-full p-1 bg-stone-900/80 border border-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
+          <img src="assets/logo.png" alt="Verve Invites Logo" class="w-full h-full object-contain rounded-full" />
+        </div>
+        <p class="font-serif-luxury text-base font-bold gold-gradient-text tracking-wider">VERVE INVITES</p>
+      </a>
+
+      <a href="https://instagram.com/verveinvites" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1.5 mt-3 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300/90 hover:bg-amber-500/20 transition-all shadow-sm">
+        <span>📸 Connect on Instagram:</span>
+        <span class="font-semibold underline underline-offset-2">@verveinvites</span>
+      </a>
+    </footer>
+
+  </main>
+
+  <script>
+    // 1. Continuous Falling Golden Petals Engine
+    const fCanvas = document.getElementById('flowerCanvas');
+    const fCtx = fCanvas.getContext('2d');
+    let petals = [];
+    const petalCount = 28; // Optimal count for smooth performance without clutter
+
+    function resizeFlowerCanvas() {
+      fCanvas.width = window.innerWidth;
+      fCanvas.height = window.innerHeight;
+    }
+    resizeFlowerCanvas();
+    window.addEventListener('resize', resizeFlowerCanvas);
+
+    class Petal {
+      constructor() {
+        this.reset(true);
+      }
+      reset(initial = false) {
+        this.x = Math.random() * fCanvas.width;
+        this.y = initial ? Math.random() * fCanvas.height : -20;
+        this.size = Math.random() * 8 + 6; // Petal size
+        this.speedY = Math.random() * 1.2 + 0.8;
+        this.speedX = Math.random() * 0.8 - 0.4;
+        this.angle = Math.random() * 360;
+        this.angularSpeed = (Math.random() - 0.5) * 1.5;
+        this.flip = Math.random() * Math.PI;
+        this.flipSpeed = Math.random() * 0.03 + 0.01;
+        // Warm translucent gold / soft marigold petals
+        this.colors = [
+          'rgba(243, 229, 171, 0.45)',
+          'rgba(212, 175, 55, 0.40)',
+          'rgba(245, 197, 66, 0.35)',
+          'rgba(255, 248, 220, 0.50)'
+        ];
+        this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
+      }
+      update() {
+        this.y += this.speedY;
+        this.x += Math.sin(this.flip) * 0.9 + this.speedX;
+        this.angle += this.angularSpeed;
+        this.flip += this.flipSpeed;
+
+        if (this.y > fCanvas.height + 20 || this.x < -20 || this.x > fCanvas.width + 20) {
+          this.reset();
+        }
+      }
+      draw() {
+        fCtx.save();
+        fCtx.translate(this.x, this.y);
+        fCtx.rotate((this.angle * Math.PI) / 180);
+        fCtx.scale(Math.sin(this.flip), 1);
+
+        fCtx.beginPath();
+        // Organic curved petal geometry
+        fCtx.moveTo(0, 0);
+        fCtx.bezierCurveTo(-this.size / 2, -this.size / 2, -this.size / 2, -this.size, 0, -this.size * 1.3);
+        fCtx.bezierCurveTo(this.size / 2, -this.size, this.size / 2, -this.size / 2, 0, 0);
+        fCtx.fillStyle = this.color;
+        fCtx.fill();
+
+        fCtx.restore();
+      }
+    }
+
+    for (let i = 0; i < petalCount; i++) {
+      petals.push(new Petal());
+    }
+
+    function animatePetals() {
+      fCtx.clearRect(0, 0, fCanvas.width, fCanvas.height);
+      petals.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animatePetals);
+    }
+    animatePetals();
+
+    // 2. Sparkles Particle Burst on Wax Seal Break
+    const pCanvas = document.getElementById('particleCanvas');
+    const pCtx = pCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeParticleCanvas() {
+      pCanvas.width = window.innerWidth;
+      pCanvas.height = window.innerHeight;
+    }
+    resizeParticleCanvas();
+    window.addEventListener('resize', resizeParticleCanvas);
+
+    function createSparkles(x, y) {
+      for (let i = 0; i < 40; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.5) * 12 - 2,
+          radius: Math.random() * 2.5 + 1,
+          alpha: 1,
+          decay: Math.random() * 0.02 + 0.015,
+          color: ['#fcedc5', '#d4af37', '#aa7c11'][Math.floor(Math.random() * 3)]
+        });
+      }
+      animateSparkles();
+    }
+
+    function animateSparkles() {
+      pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+      particles.forEach((p, index) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= p.decay;
+
+        pCtx.beginPath();
+        pCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        pCtx.fillStyle = p.color;
+        pCtx.globalAlpha = Math.max(0, p.alpha);
+        pCtx.fill();
+
+        if (p.alpha <= 0) particles.splice(index, 1);
+      });
+
+      if (particles.length > 0) {
+        requestAnimationFrame(animateSparkles);
+      } else {
+        pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+      }
+    }
+
+    // 3. Unseal Envelope Trigger
+    const sealButton = document.getElementById('sealButton');
+    const envelopeFlap = document.getElementById('envelopeFlap');
+    const envelopeScreen = document.getElementById('envelopeScreen');
+    const bgAudio = document.getElementById('bgAudio');
+    const musicToggle = document.getElementById('musicToggle');
+    const musicIcon = document.getElementById('musicIcon');
+
+    let isPlaying = false;
+
+    sealButton.addEventListener('click', (e) => {
+      const rect = sealButton.getBoundingClientRect();
+      createSparkles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+      envelopeFlap.classList.add('flap-open');
+
+      setTimeout(() => {
+        envelopeScreen.classList.add('opened');
+      }, 350);
+
+      bgAudio.play().then(() => {
+        isPlaying = true;
+        musicIcon.innerText = '🔊';
+      }).catch((err) => {
+        console.warn("Audio autoplay blocked by browser:", err);
+      });
+    });
+
+    // 4. Music Play/Pause Toggle
+    musicToggle.addEventListener('click', () => {
+      if (isPlaying) {
+        bgAudio.pause();
+        isPlaying = false;
+        musicIcon.innerText = '🔇';
+      } else {
+        bgAudio.play().then(() => {
+          isPlaying = true;
+          musicIcon.innerText = '🔊';
+        });
+      }
+    });
+
+    // 5. Scratch Card Canvas Engine
+    const canvas = document.getElementById('scratchCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+
+    const goldGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    goldGrad.addColorStop(0, '#e5ca7f');
+    goldGrad.addColorStop(0.5, '#b88d30');
+    goldGrad.addColorStop(1, '#8f671b');
+    ctx.fillStyle = goldGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#442d08';
+    ctx.font = '600 11px Montserrat';
+    ctx.textAlign = 'center';
+    ctx.fillText('SCRATCH TO REVEAL', canvas.width / 2, canvas.height / 2 + 4);
+
+    function scratch(e) {
+      if (!isDrawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(x, y, 18, 0, Math.PI * 2, false);
+      ctx.fill();
+    }
+
+    canvas.addEventListener('mousedown', () => isDrawing = true);
+    canvas.addEventListener('mouseup', () => isDrawing = false);
+    canvas.addEventListener('mousemove', scratch);
+
+    canvas.addEventListener('touchstart', (e) => { isDrawing = true; scratch(e); }, { passive: true });
+    canvas.addEventListener('touchend', () => isDrawing = false);
+    canvas.addEventListener('touchmove', scratch, { passive: true });
+
+    // 6. Live Countdown Engine (Target: September 13, 2026 Morning)
+    const targetDate = new Date('September 13, 2026 06:00:00').getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance > 0) {
+        document.getElementById('days').innerText = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
+        document.getElementById('hours').innerText = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+        document.getElementById('minutes').innerText = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+        document.getElementById('seconds').innerText = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+      }
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+  </script>
+</body>
+</html>
